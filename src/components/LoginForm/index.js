@@ -1,127 +1,108 @@
-import {Component} from 'react'
-import Cookies from 'js-cookie'
-import axios from 'axios'
-import {withRouter} from 'react-router-dom'
-import './index.css'
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
+import axios from "axios";
+import { useUser } from "../userFile/UserContext"; // import context
+import "./index.css";
 
-class LoginForm extends Component {
-  state = {
-    username: '',
-    password: '',
-    showSubmitError: false,
-    errorMsg: '',
-    user: null,
-  }
+const LoginForm = () => {
+  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const { setUserData } = useUser();
+  const {userData}=useUser() // get context setter
 
-  onChangeUsername = event => {
-    this.setState({username: event.target.value})
-  }
+  const handleChange = (e) => {
+    setFormData((prev) => ({ ...prev, [e.target.id]: e.target.value }));
+  };
 
-  onChangePassword = event => {
-    this.setState({password: event.target.value})
-  }
-
-  submitForm = async event => {
-    event.preventDefault()
-    const {username, password} = this.state
-    const {history} = this.props
+  const submitForm = async (e) => {
+    e.preventDefault();
+    setError("");
 
     try {
-      const res = await axios.post(
-        'https://attractive-erin-ladybug.cyclic.cloud/login',
-        {
-          username,
-          password,
-        },
-      )
-      console.log(res)
-
+      const res = await axios.post("http://localhost:3000/login", formData);
+      console.log(res.data.type)
       if (res.data.validation) {
-        let user = ''
-        if (res.data.userType === 'student') {
-          user = 'student'
-          history.replace('/', {username, user})
-        } else if (res.data.userType === 'staff') {
-          user = 'staff'
-          history.replace('/history', {username, user})
-        } else {
-          user = 'hod'
-          history.replace('/history', {username, user})
-        }
-        this.setState({showSubmitError: false})
-        Cookies.set('jwt_token', res.data.jeevToken)
+        const { username } = formData;
+        console.log(username)
+        const userType = res.data.type;
+        console.log(userType)
+        // ✅ Save in Context
+        setUserData({ username,user:userType});
+        console.log(userData)
+
+        // ✅ Store token
+        Cookies.set("jwt_token", res.data.jeevToken);
+
+        // ✅ Navigate
+        const routes = {
+          student: "/",
+          staff: "/history",
+          hod: "/history",
+        };
+        navigate(routes[userType] || "/", { replace: true });
       } else {
-        this.setState({showSubmitError: true, errorMsg: res.data.Error})
+        setError(res.data.Error || "Invalid login attempt");
       }
-    } catch (error) {
-      console.error('Login error:', error.message)
+    } catch (err) {
+      console.error("Login error:", err.message);
+      setError("Server error, please try again later.");
     }
-  }
+  };
 
-  renderPasswordField = () => {
-    const {password} = this.state
-    return (
-      <>
-        <label className="input-label" htmlFor="password">
-          PASSWORD
-        </label>
-        <input
-          type="password"
-          id="password"
-          className="password-input-field"
-          value={password}
-          onChange={this.onChangePassword}
-        />
-      </>
-    )
-  }
+  return (
+    <div className="login-form-container">
+      <img
+        src="https://res.cloudinary.com/dprxsgnqn/image/upload/v1694320298/vc9ukp7bdnvkhkvzkn3n.jpg"
+        className="login-image"
+        alt="website login"
+      />
+      <form className="form-container" onSubmit={submitForm}>
+        <div className="login-image-container">
+          <img
+            src="https://yt3.ggpht.com/a/AATXAJwORzAUuq_u1LIlDdiqGEJCGq9rSm8AphjwjQ=s900-c-k-c0xffffffff-no-rj-mo"
+            className="login-website-logo-desktop-image"
+            alt="website logo"
+          />
+        </div>
 
-  renderUsernameField = () => {
-    const {username} = this.state
-    return (
-      <>
-        <label className="input-label" htmlFor="username">
-          USERNAME
-        </label>
-        <input
-          type="text"
-          id="username"
-          className="username-input-field"
-          value={username}
-          onChange={this.onChangeUsername}
-        />
-      </>
-    )
-  }
+        <div className="input-container">
+          <label className="input-label" htmlFor="username">
+            USERNAME
+          </label>
+          <input
+            type="text"
+            id="username"
+            className="username-input-field"
+            value={formData.username}
+            onChange={handleChange}
+            required
+          />
+        </div>
 
-  render() {
-    const {showSubmitError, errorMsg} = this.state
+        <div className="input-container">
+          <label className="input-label" htmlFor="password">
+            PASSWORD
+          </label>
+          <input
+            type="password"
+            id="password"
+            className="password-input-field"
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
+        </div>
 
-    return (
-      <div className="login-form-container">
-        <img
-          src="https://res.cloudinary.com/dprxsgnqn/image/upload/v1694320298/vc9ukp7bdnvkhkvzkn3n.jpg"
-          className="login-image"
-          alt="website login"
-        />
-        <form className="form-container" onSubmit={this.submitForm}>
-          <div className="login-image-container">
-            <img
-              src="https://yt3.ggpht.com/a/AATXAJwORzAUuq_u1LIlDdiqGEJCGq9rSm8AphjwjQ=s900-c-k-c0xffffffff-no-rj-mo"
-              className="login-website-logo-desktop-image"
-              alt="website logo"
-            />
-          </div>
-          <div className="input-container">{this.renderUsernameField()}</div>
-          <div className="input-container">{this.renderPasswordField()}</div>
-          <button type="submit" className="login-button">
-            Login
-          </button>
-          {showSubmitError && <p className="error-message">*{errorMsg}</p>}
-        </form>
-      </div>
-    )
-  }
-}
+        <button type="submit" className="login-button">
+          Login
+        </button>
 
-export default withRouter(LoginForm)
+        {error && <p className="error-message">*{error}</p>}
+      </form>
+    </div>
+  );
+};
+
+export default LoginForm;

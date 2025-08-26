@@ -1,251 +1,195 @@
-import 'bootstrap/dist/css/bootstrap.min.css'
-import 'bootstrap-icons/font/bootstrap-icons.css'
-import {Link, Outlet, useLocation} from 'react-router-dom'
-import {Component} from 'react'
-import axios from 'axios'
-import Cookies from 'js-cookie'
-import Header from '../Header'
+import "bootstrap/dist/css/bootstrap.min.css"
+import "bootstrap-icons/font/bootstrap-icons.css"
+import { useState } from "react"
+import { useLocation } from "react-router-dom"
+import axios from "axios"
+import Header from "../Header"
 
-class index extends Component {
-  state = {
-    registernumber: '',
-    name: '',
-    email: '',
-    year: '',
-    department: '',
-    reason: '',
-    semester: '',
-    showSubmitError: false,
-    errorMsg: '',
+const OutpassForm = () => {
+  const location = useLocation()
+  const { username, user } = location.state || {}
+
+  const [formData, setFormData] = useState({
+    registerNo: "",
+    name: "",
+    email: "",
+    year: "",
+    department: "",
+    semester: "",
+    reason: "",
+  })
+
+  const [errorMsg, setErrorMsg] = useState("")
+
+  const handleChange = (field) => (e) => {
+    setFormData({ ...formData, [field]: e.target.value })
   }
 
-  onChangeregisterNo = event => {
-    this.setState({registernumber: event.target.value})
-  }
-
-  onChangename = event => {
-    this.setState({name: event.target.value})
-  }
-
-  onChangeemail = event => {
-    this.setState({email: event.target.value})
-  }
-
-  onChangeyear = event => {
-    this.setState({year: event.target.value})
-  }
-
-  onChangedepartment = event => {
-    this.setState({department: event.target.value})
-  }
-
-  onChangeSem = event => {
-    this.setState({semester: event.target.value})
-  }
-
-  onChangereason = event => {
-    this.setState({reason: event.target.value})
-  }
-
-  onSubmit = async event => {
-    event.preventDefault()
-    const {
-      registernumber,
-      name,
-      email,
-      year,
-      department,
-      reason,
-      semester,
-      showSubmitError,
-      errorMsg,
-    } = this.state
+  const onSubmit = async (e) => {
+    e.preventDefault()
     try {
+      console.log(formData.registerno)
       const res = await axios.post(
-        'https://attractive-erin-ladybug.cyclic.cloud/outpass',
-        {
-          name,
-          registernumber,
-          email,
-          year,
-          department,
-          semester,
-          reason,
-        },
+        "http://localhost:3000/outpass",
+        formData
       )
 
       if (res.data.submission) {
-        this.setState({
-          showSubmitError: false,
-          registernumber: '',
-          name: '',
-          email: '',
-          reason: '',
+        setFormData({
+          registerNo: "",
+          name: "",
+          email: "",
+          year: "",
+          department: "",
+          semester: "",
+          reason: "",
         })
-        alert('Outpass Submitted Successfully')
-        // Use this.props.history.push to navigate to the dashboard
+        setErrorMsg("")
+        alert("✅ Outpass Submitted Successfully")
       } else {
-        this.setState({showSubmitError: true, errorMsg: res.data.Error})
-        alert('cant submit outpass')
+        setErrorMsg(res.data.Error || "Submission failed")
       }
-    } catch (error) {
-      console.error('Login error:', error.message)
-      alert('server error')
+    } catch {
+      setErrorMsg("Server error, please try again later.")
     }
   }
 
-  onClickLogout = () => {
-    Cookies.remove('jwt_token')
-    const {history} = this.props
-    history.replace('/login')
-  }
-
-  render() {
-    const {
-      name,
-      registernumber,
-      email,
-      year,
-      department,
-      semester,
-      reason,
-      showSubmitError,
-      errorMsg,
-    } = this.state
-    // const {location} = this.props
-    // const {state} = location
-    // const userDetails = state && state.userDetails
-    // const username = userDetails ? userDetails.username : ''
-    // const user = userDetails ? userDetails.user : ''
-    const {location} = this.props
-    const {username, user} = location.state || {}
-    return (
-      <div className="container-fluid">
-        <div className="row flex-nowrap">
-          <Header username={username} user={user} />
-          <div className="col p-0 m-0">
-            <div className="p-2 d-flex justify-content-center shadow">
-              <h4>Outpass Management System</h4>
-            </div>
-            <form className="row p-3 g-3" onSubmit={this.onSubmit}>
-              <div className="col-md-6">
-                <label htmlFor="inputEmail4" className="form-label">
-                  Register No
-                </label>
-                <input
-                  type="number"
-                  value={registernumber}
-                  onChange={this.onChangeregisterNo}
-                  className="form-control"
-                  id="inputEmail4"
-                />
-              </div>
-              <div className="col-md-6">
-                <label htmlFor="inputPassword4" className="form-label">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="inputPassword4"
-                  value={name}
-                  onChange={this.onChangename}
-                />
-              </div>
-              <div className="col-md-6">
-                <label htmlFor="inputPassword4" className="form-label">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  className="form-control"
-                  value={email}
-                  id="inputPassword4"
-                  onChange={this.onChangeemail}
-                />
-              </div>
-
-              <div className="col-md-6">
-                <label htmlFor="inputState" className="form-label">
-                  Year
-                </label>
-                <select
-                  id="inputState"
-                  onChange={this.onChangeyear}
-                  className="form-select"
-                >
-                  <option>V</option>
-                  <option>IV</option>
-                  <option>III</option>
-                  <option>II</option>
-                  <option>I</option>
-                </select>
-              </div>
-              <div className="col-md-4">
-                <label htmlFor="inputState" className="form-label">
-                  Semester
-                </label>
-                <select
-                  id="inputState"
-                  onChange={this.onChangeSem}
-                  className="form-select"
-                >
-                  <option>X</option>
-                  <option>IX</option>
-                  <option>VIII</option>
-                  <option>VII</option>
-                  <option>VI</option>
-                  <option>VI</option>
-                  <option>V</option>
-                  <option>IV</option>
-                  <option>III</option>
-                  <option>II</option>
-                  <option>I</option>
-                </select>
-              </div>
-              <div className="col-md-4">
-                <label htmlFor="inputState" className="form-label">
-                  Department
-                </label>
-                <select
-                  id="inputState"
-                  onChange={this.onChangedepartment}
-                  className="form-select"
-                >
-                  <option>EEE</option>
-                  <option>ECE</option>
-                  <option>CYS</option>
-                  <option>MECH</option>
-                  <option>AI</option>
-                  <option>IOT</option>
-                  <option>CSE</option>
-                </select>
-              </div>
-              <div className="col-12">
-                <label htmlFor="inputAddress" className="form-label">
-                  Reason
-                </label>
-                <textarea
-                  type="text"
-                  className="form-control"
-                  value={reason}
-                  id="inputAddress"
-                  placeholder="Enter Valid Reason"
-                  onChange={this.onChangereason}
-                  col="10"
-                />
-              </div>
-              <div className="col-12 d-flex justify-content-center">
-                <button type="submit" className="btn btn-primary">
-                  Request Outpass
-                </button>
-              </div>
-            </form>
+  return (
+    <div className="container-fluid">
+      <div className="row flex-nowrap">
+        <Header username={username} user={user} />
+        <div className="col p-0 m-0">
+          <div className="p-2 d-flex justify-content-center shadow">
+            <h4>Outpass Management System</h4>
           </div>
+
+          <form className="row p-3 g-3" onSubmit={onSubmit}>
+            {/* Register No */}
+            <div className="col-md-6">
+              <label className="form-label">Register No</label>
+              <input
+                type="text"
+                value={formData.registerNo}
+                onChange={handleChange("registerNo")}
+                className="form-control"
+                required
+              />
+            </div>
+
+            {/* Name */}
+            <div className="col-md-6">
+              <label className="form-label">Name</label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={handleChange("name")}
+                className="form-control"
+                required
+              />
+            </div>
+
+            {/* Email */}
+            <div className="col-md-6">
+              <label className="form-label">Email</label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={handleChange("email")}
+                className="form-control"
+                required
+              />
+            </div>
+
+            {/* Year */}
+            <div className="col-md-6">
+              <label className="form-label">Year</label>
+              <select
+                value={formData.year}
+                onChange={handleChange("year")}
+                className="form-select"
+                required
+              >
+                <option value="">Select</option>
+                <option>I</option>
+                <option>II</option>
+                <option>III</option>
+                <option>IV</option>
+                <option>V</option>
+              </select>
+            </div>
+
+            {/* Semester */}
+            <div className="col-md-4">
+              <label className="form-label">Semester</label>
+              <select
+                value={formData.semester}
+                onChange={handleChange("semester")}
+                className="form-select"
+                required
+              >
+                <option value="">Select</option>
+                <option>I</option>
+                <option>II</option>
+                <option>III</option>
+                <option>IV</option>
+                <option>V</option>
+                <option>VI</option>
+                <option>VII</option>
+                <option>VIII</option>
+                <option>IX</option>
+                <option>X</option>
+              </select>
+            </div>
+
+            {/* Department */}
+            <div className="col-md-4">
+              <label className="form-label">Department</label>
+              <select
+                value={formData.department}
+                onChange={handleChange("department")}
+                className="form-select"
+                required
+              >
+                <option value="">Select</option>
+                <option>CSE</option>
+                <option>ECE</option>
+                <option>EEE</option>
+                <option>MECH</option>
+                <option>AI</option>
+                <option>IOT</option>
+                <option>CYS</option>
+              </select>
+            </div>
+
+            {/* Reason */}
+            <div className="col-12">
+              <label className="form-label">Reason</label>
+              <textarea
+                value={formData.reason}
+                onChange={handleChange("reason")}
+                className="form-control"
+                placeholder="Enter Valid Reason"
+                rows="3"
+                required
+              />
+            </div>
+
+            {/* Error */}
+            {errorMsg && (
+              <div className="col-12 text-danger fw-bold">{errorMsg}</div>
+            )}
+
+            {/* Submit */}
+            <div className="col-12 d-flex justify-content-center">
+              <button type="submit" className="btn btn-primary">
+                Request Outpass
+              </button>
+            </div>
+          </form>
         </div>
       </div>
-    )
-  }
+    </div>
+  )
 }
 
-export default index
+export default OutpassForm

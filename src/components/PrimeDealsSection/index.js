@@ -1,43 +1,39 @@
-import {Component} from 'react'
-import Cookies from 'js-cookie'
-import Loader from 'react-loader-spinner'
+import { useState, useEffect } from "react"
+import Cookies from "js-cookie"
+import { ClipLoader } from "react-spinners"   // ✅ new loader
 
-import ProductCard from '../ProductCard'
-import './index.css'
+import ProductCard from "../ProductCard"
+import "./index.css"
 
 const apiStatusConstants = {
-  initial: 'INITIAL',
-  success: 'SUCCESS',
-  failure: 'FAILURE',
-  inProgress: 'IN_PROGRESS',
+  initial: "INITIAL",
+  success: "SUCCESS",
+  failure: "FAILURE",
+  inProgress: "IN_PROGRESS",
 }
 
-class PrimeDealsSection extends Component {
-  state = {
-    primeDeals: [],
-    apiStatus: apiStatusConstants.initial,
-  }
+function PrimeDealsSection() {
+  const [primeDeals, setPrimeDeals] = useState([])
+  const [apiStatus, setApiStatus] = useState(apiStatusConstants.initial)
 
-  componentDidMount() {
-    this.getPrimeDeals()
-  }
+  useEffect(() => {
+    getPrimeDeals()
+  }, [])
 
-  getPrimeDeals = async () => {
-    this.setState({
-      apiStatus: apiStatusConstants.inProgress,
-    })
+  const getPrimeDeals = async () => {
+    setApiStatus(apiStatusConstants.inProgress)
 
-    const jwtToken = Cookies.get('jwt_token')
+    const jwtToken = Cookies.get("jwt_token")
+    const apiUrl = "https://apis.ccbp.in/prime-deals"
 
-    const apiUrl = 'https://apis.ccbp.in/prime-deals'
     const options = {
-      headers: {
-        Authorization: `Bearer ${jwtToken}`,
-      },
-      method: 'GET',
+      headers: { Authorization: `Bearer ${jwtToken}` },
+      method: "GET",
     }
+
     const response = await fetch(apiUrl, options)
-    if (response.ok === true) {
+
+    if (response.ok) {
       const fetchedData = await response.json()
       const updatedData = fetchedData.prime_deals.map(product => ({
         title: product.title,
@@ -47,33 +43,25 @@ class PrimeDealsSection extends Component {
         imageUrl: product.image_url,
         rating: product.rating,
       }))
-      this.setState({
-        primeDeals: updatedData,
-        apiStatus: apiStatusConstants.success,
-      })
-    }
-    if (response.status === 401) {
-      this.setState({
-        apiStatus: apiStatusConstants.failure,
-      })
+      setPrimeDeals(updatedData)
+      setApiStatus(apiStatusConstants.success)
+    } else if (response.status === 401) {
+      setApiStatus(apiStatusConstants.failure)
     }
   }
 
-  renderPrimeDealsList = () => {
-    const {primeDeals} = this.state
-    return (
-      <div>
-        <h1 className="primedeals-list-heading">Exclusive Prime Deals</h1>
-        <ul className="products-list">
-          {primeDeals.map(product => (
-            <ProductCard productData={product} key={product.id} />
-          ))}
-        </ul>
-      </div>
-    )
-  }
+  const renderPrimeDealsList = () => (
+    <div>
+      <h1 className="primedeals-list-heading">Exclusive Prime Deals</h1>
+      <ul className="products-list">
+        {primeDeals.map(product => (
+          <ProductCard productData={product} key={product.id} />
+        ))}
+      </ul>
+    </div>
+  )
 
-  renderPrimeDealsFailureView = () => (
+  const renderPrimeDealsFailureView = () => (
     <img
       src="https://assets.ccbp.in/frontend/react-js/exclusive-deals-banner-img.png"
       alt="Register Prime"
@@ -81,24 +69,21 @@ class PrimeDealsSection extends Component {
     />
   )
 
-  renderLoadingView = () => (
+  const renderLoadingView = () => (
     <div className="products-loader-container">
-      <Loader type="ThreeDots" color="#0b69ff" height="50" width="50" />
+      <ClipLoader color="#0b69ff" size={50} />
     </div>
   )
 
-  render() {
-    const {apiStatus} = this.state
-    switch (apiStatus) {
-      case apiStatusConstants.success:
-        return this.renderPrimeDealsList()
-      case apiStatusConstants.failure:
-        return this.renderPrimeDealsFailureView()
-      case apiStatusConstants.inProgress:
-        return this.renderLoadingView()
-      default:
-        return null
-    }
+  switch (apiStatus) {
+    case apiStatusConstants.success:
+      return renderPrimeDealsList()
+    case apiStatusConstants.failure:
+      return renderPrimeDealsFailureView()
+    case apiStatusConstants.inProgress:
+      return renderLoadingView()
+    default:
+      return null
   }
 }
 

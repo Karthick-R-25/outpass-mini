@@ -1,15 +1,15 @@
-import React, {createContext, useContext, useState} from 'react'
+/* eslint-disable react-refresh/only-export-components */
+
+import React, { createContext, useContext, useState } from 'react'
 
 const UserContext = createContext()
 
-export const UserProvider = ({children}) => {
-  const [userData, setUserData] = useState({username: '', user: ''})
+export const UserProvider = ({ children }) => {
+  const [userData, setUserData] = useState({ username: '', user: '' })
 
   return (
-    <UserContext.Provider value={{userData, setUserData}}>
-      {typeof children === 'function'
-        ? children(userData.username, userData.user)
-        : children}
+    <UserContext.Provider value={{ userData, setUserData }}>
+      {children}
     </UserContext.Provider>
   )
 }
